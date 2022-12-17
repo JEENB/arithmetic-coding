@@ -1,6 +1,7 @@
 import os
 import math
 import tabulate
+import json
 
 
 file = os.getcwd() + '/src/files/hello.txt'
@@ -143,6 +144,7 @@ class ArithmeticCoding:
 
 		self.__symbol_prob(symbols)  ## computes the truncation value 
 		sym = ''
+		output_sym = ''
 		for i, s in enumerate(symbols):
 			sym += s
 			if s not in self.symbols:
@@ -154,6 +156,7 @@ class ArithmeticCoding:
 			high = low_old + range * interval[1]
 			while (high < 0.5 and low < 0.5) or (high > 0.5 and low > 0.5) and i != len(symbols)-1:
 				if low > 0.5 and high > 0.5:
+					output_sym += '1'
 					if self.show_steps:
 						output.append([sym, (low, high), "Right Scaling \nOutput = 1"])
 					low = self.__right_scale(low)
@@ -161,6 +164,7 @@ class ArithmeticCoding:
 					
 
 				elif high < 0.5 and low < 0.5:
+					output_sym += '0'
 					if self.show_steps:
 						output.append([sym, (low, high), "Left Scaling \nOutput = 0"])
 					low = self.__left_scale(low)
@@ -178,22 +182,89 @@ class ArithmeticCoding:
 
 		self.tag = (high_old + low_old)/2  
 
-		self.encoded_val = decToBinConversion(self.tag, self.lx)
+		tag_to_bin = decToBinConversion(self.tag, self.lx - len(output_sym))
+
+		self.encoded_value = '0.' + output_sym + tag_to_bin.split('.')[1]
 
 		if self.show_steps:
+			output.append([' ', f"Rescaling Output = {output_sym}\nTag = {self.tag}\nCompressed Value = {self.encoded_value}"])
 			print(tabulate.tabulate(output, headers= ['Symbol', 'Interval', 'Remark'], tablefmt="pretty", numalign='center'))
 
 
-		return self.encoded_val
+		return self.encoded_value, self.num_elements
 
+	def __return_symbol(self, tag):
+		''' 
+		Given a tag returns the corresponding symbol
+		'''
+		for key, value in self.cum_dist.items():
 
-	def decoding(self, tag:str, len:int):
+			if tag < value[1]:
+				'''
+				intervals are disjoints
+				'''
+				return (key, value)
+
+	def decoding(self, encoded_value:str, length:int):
 		'''
 		check interval, 
 		update interval
 		pick new 
 		repeat
 		'''
+		t = getBinaryFractionValue(encoded_value)
+		decoded_symbols = ''
+		low_old = 0
+		high_old = 1
+		ran = 1
+		for i in range(length):
+			t_prime = (t - low_old)/(ran)
+			# print(i)
+			# print("t", t)
+			# print("low", low_old)
+			# print("high", high_old)
+			# print('t_prime' ,t_prime)
+			symb, interval = self.__return_symbol(t_prime)
+			decoded_symbols += symb
+
+			low = low_old + ran * interval[0]
+			high = low_old + ran * interval[1]
+			print("INt", (low, high))
+
+			j = 0
+			while (high < 0.5 and low <= 0.5) or (high > 0.5 and low >= 0.5):
+				j += 1
+				if low >= 0.5 and high > 0.5:
+
+					encoded_value = "0." + encoded_value[3:]
+					t = getBinaryFractionValue(encoded_value)
+
+					# if self.show_steps:
+					# 	output.append([sym, (low, high), "Right Scaling \nOutput = 1"])
+					low = self.__right_scale(low)
+					high = self.__right_scale(high)
+					
+
+				elif high < 0.5 and low <= 0.5:
+
+					encoded_value = "0." + encoded_value[3:]
+					t = getBinaryFractionValue(encoded_value)
+
+					# if self.show_steps:
+					# 	output.append([sym, (low, high), "Left Scaling \nOutput = 0"])
+					low = self.__left_scale(low)
+					high = self.__left_scale(high)
+					
+
+			# if self.show_steps:
+			# 	output.append([sym, (low, high), "Pick Next Symbol"])
+				
+			ran = high - low
+
+			low_old = low
+			high_old = high
+			print(decoded_symbols)
+			print("--------------------")
 
 		
 	
@@ -202,8 +273,8 @@ class ArithmeticCoding:
 dist = {'a':0.8, 'b': 0.02, 'c': 0.18}
 
 
-f = ArithmeticCoding(file, distribution= dist, show_steps= True)
+f = ArithmeticCoding(file, distribution= None, show_steps= True)
 
-print(f.encoding(value='acba'))
-print(f.tag)
+encoded_value, number = f.encoding(value=None)
+print(f.decoding(encoded_value, length = number))
 	
