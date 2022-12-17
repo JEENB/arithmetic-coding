@@ -1,8 +1,9 @@
 import os
 import math
+import tabulate
 
 
-file = os.getcwd() + '/files/hello.txt'
+file = os.getcwd() + '/src/files/hello.txt'
 
 def decToBinConversion(no:int, precision:int)->str: 
     binary = ""  
@@ -47,14 +48,24 @@ def getBinaryFractionValue(binaryFraction):
 	return value
 
 class ArithmeticCoding:
-	def __init__(self, file) -> None:
+	def __init__(self, file, distribution: dict = None, show_steps: bool = False) -> None:
 		self.file = file
-		self.__parse()
+		self.show_steps = show_steps
+		if distribution == None:
+			self.__parse()
+		else:
+			self.prob_dist = distribution
+			self.symbols = self.prob_dist.keys()
 		self.__cumulativeDist()
+
+		if self.show_steps:
+			print(tabulate.tabulate(list(self.prob_dist.items()), headers=["Symbol", "Probability"], tablefmt='pretty', numalign='center'))
+			print(tabulate.tabulate(list(self.cum_dist.items()), headers=["Symbols", 'Range'],tablefmt="pretty", numalign='center'))
 		
 
 	def __parse(self):
 		'''
+		Key value pair
 		+-----------------------+-------------------+
 		|       Symbol			|		Freq		|
 		+-----------------------+-------------------+
@@ -75,6 +86,11 @@ class ArithmeticCoding:
 				except:
 					self.prob_dist[i] = 1
 				self.num_elements += 1
+		
+		for key in self.prob_dist.keys():
+			self.prob_dist[key] = self.prob_dist[key]/self.num_elements
+
+
 
 	def __cumulativeDist(self):
 
@@ -90,8 +106,10 @@ class ArithmeticCoding:
 		self.cum_dist = {}
 		temp_freq = 0
 		for symbol, freq in self.prob_dist.items():
-			self.cum_dist[symbol] = [temp_freq/self.num_elements, (temp_freq + freq)/self.num_elements]  ## storing high and low
+			self.cum_dist[symbol] = [temp_freq, (temp_freq + freq)]  ## storing high and low
 			temp_freq += freq
+		
+		
 
 	def __symbol_prob(self, symbols):
 		'''
@@ -101,15 +119,22 @@ class ArithmeticCoding:
 		'''
 		self.prob = 1
 		for s in symbols:
-			self.prob *= self.prob_dist[s]/self.num_elements
+			self.prob *= self.prob_dist[s]
 		self.lx =  abs(math.ceil(math.log2(self.prob))) + 1
 
-
+	def __left_scale(self, x:float):
+		return 2 * x
+	
+	def __right_scale(self, x:float):
+		return 2 * x - 1
 
 	def encoding(self, value:str = None) -> float:
 		'''
 		encodes for a subset of strings as well as the entire file. 
 		'''
+
+		if self.show_steps: 
+			output = []
 
 		low_old = 0
 		high_old = 1
@@ -117,15 +142,34 @@ class ArithmeticCoding:
 		symbols= self.symbols if value == None else value
 
 		self.__symbol_prob(symbols)  ## computes the truncation value 
-
-		for s in symbols:
+		sym = ''
+		for i, s in enumerate(symbols):
+			sym += s
 			if s not in self.symbols:
 				raise ValueError("Value symbol not fround in prob distribuiton")
 
 			interval  = self.cum_dist[s]
-			
+
 			low = low_old + range * interval[0]
 			high = low_old + range * interval[1]
+			while (high < 0.5 and low < 0.5) or (high > 0.5 and low > 0.5) and i != len(symbols)-1:
+				if low > 0.5 and high > 0.5:
+					if self.show_steps:
+						output.append([sym, (low, high), "Right Scaling \nOutput = 1"])
+					low = self.__right_scale(low)
+					high = self.__right_scale(high)
+					
+
+				elif high < 0.5 and low < 0.5:
+					if self.show_steps:
+						output.append([sym, (low, high), "Left Scaling \nOutput = 0"])
+					low = self.__left_scale(low)
+					high = self.__left_scale(high)
+					
+
+			if self.show_steps:
+				output.append([sym, (low, high), "Pick Next Symbol"])
+				
 			range = high - low
 
 			low_old = low
@@ -135,6 +179,11 @@ class ArithmeticCoding:
 		self.tag = (high_old + low_old)/2  
 
 		self.encoded_val = decToBinConversion(self.tag, self.lx)
+
+		if self.show_steps:
+			print(tabulate.tabulate(output, headers= ['Symbol', 'Interval', 'Remark'], tablefmt="pretty", numalign='center'))
+
+
 		return self.encoded_val
 
 
@@ -146,36 +195,15 @@ class ArithmeticCoding:
 		repeat
 		'''
 
-
-		self.t = getBinaryFractionValue(tag)
-		n = 0
-		decode_value = ''
-		low_old = 0
-		high_old = 1
-		range = 1
-		while n != len:
-			
-			for key, values in self.cum_dist.items():
-				low_old = values[0]
-				high_old = values[1]
-				if self.t > low and self.t < high:
-					decode_value += key
-					low = low_old + range * values[0]
-					high = low_old + range * values[1]
-					range = high - low
-					low_old = low
-					high_old = high
-
 		
 	
 
 		
+dist = {'a':0.8, 'b': 0.02, 'c': 0.18}
 
 
+f = ArithmeticCoding(file, distribution= dist, show_steps= True)
 
-f = ArithmeticCoding(file)
-print("Prob distn", f.prob_dist)
-print("Cum distn", f.cum_dist)
-print(f.encoding("l"))
+print(f.encoding(value='acba'))
 print(f.tag)
 	
