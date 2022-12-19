@@ -1,5 +1,5 @@
-elif high < 0.5 and low < 0.5:
-					if self.show_steps:
-						output.append([sym, (low, high), "Left Scaling \nOutput = 0"])
-					low = self.__left_scale(low)
-					high = self.__left_scale(high)
+Hello World!
+Bonjour Monde!
+Ola Mundo!
+Namaskar Sansar!
+Hallo Welt

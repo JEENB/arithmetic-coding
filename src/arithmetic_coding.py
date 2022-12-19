@@ -79,7 +79,7 @@ class ArithmeticCoding:
 		self.prob_dist = {}
 		self.num_elements = 0
 		self.symbols = []
-		f  =  open(self.file, 'r', encoding='ascii')
+		f  =  open(self.file, 'r', encoding='utf-8')
 		for line in f:
 			for i in line:
 				self.symbols.append(i)
@@ -191,7 +191,7 @@ class ArithmeticCoding:
 			output.append([' ', f"Rescaling Output = {output_sym}\nTag = {self.tag}\nCompressed Value = {self.encoded_value}"])
 			print(tabulate.tabulate(output, headers= ['Symbol', 'Interval', 'Remark'], tablefmt="pretty", numalign='center'))
 		else: 
-			print("Encoded value = ", self.encoded_value)
+			print("Encoded value \n-------------\n", self.encoded_value)
 		
 		return self.encoded_value, len(symbols)
 
@@ -260,9 +260,6 @@ class ArithmeticCoding:
 					low = self.__left_scale(low)
 					high = self.__left_scale(high)
 					
-					
-
-				
 			ran = high - low
 
 			low_old = low
@@ -274,7 +271,7 @@ class ArithmeticCoding:
 			print(tabulate.tabulate(output, headers=['Decoded Symb', 'Encoded Value', 'Tag', 'Range', 'Remark'], tablefmt="pretty", numalign='center'))
 			print(f"Decoded Value = {decoded_symbols}")
 		else: 
-			print(f"\nDecoded Value = {decoded_symbols}")
+			print(f"\nDecoded Value\n-------------\n{decoded_symbols}")
 		
 		return 0
 
