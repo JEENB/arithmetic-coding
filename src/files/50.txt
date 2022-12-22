@@ -1,0 +1,1 @@
+Hello world, this is jenish. This is a dummy input for arithmetic encoding. The characters length must be about 50.

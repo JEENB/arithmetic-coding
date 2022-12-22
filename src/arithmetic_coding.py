@@ -4,8 +4,6 @@ import tabulate
 import json
 
 
-file = os.getcwd() + '/src/files/hello.txt'
-
 def decToBinConversion(no:int, precision:int)->str: 
     binary = ""  
     IntegralPart = int(no)  
@@ -48,7 +46,35 @@ def getBinaryFractionValue(binaryFraction):
 
 	return value
 
+def check(t1:str, t2:str) -> float:
+	'''
+	Computes the error rate and calculates the places where error occured
+	'''
+	min_str = min(len(t1), len(t2))
+	max_str = max(len(t1), len(t2))
+	err = 0
+	for i in range(min_str):
+		if t1[i] != t2[i]:
+			err += 1
+		else:
+			err += 0
+	print(f"Error = {err*100/max_str}%")
+
+
 class ArithmeticCoding:
+	'''
+	Parameters:
+	------------
+	file: file you want to encode
+	distribution: default None/ dict
+			accepts arbitrary distribution, {symbol, probability}
+			dist = {'a':0.8, 'b': 0.02, 'c': 0.18}
+			TODO: check for probability distribution
+	show_steps: bool: default False 
+			show encoding and decoding process in the terminal
+			use for small inputs only. 
+	
+	'''
 	def __init__(self, file, distribution: dict = None, show_steps: bool = False) -> None:
 		self.file = file
 		self.show_steps = show_steps
@@ -61,7 +87,11 @@ class ArithmeticCoding:
 		self.__cumulativeDist()
 
 		if self.show_steps:
+			print("Probability Distribution")
+			print("-------------------------")
 			print(tabulate.tabulate(list(self.prob_dist.items()), headers=["Symbol", "Probability"], tablefmt='pretty', numalign='center'))
+			print("\nCumulative Distribution")
+			print("------------------------")
 			print(tabulate.tabulate(list(self.cum_dist.items()), headers=["Symbols", 'Range'],tablefmt="pretty", numalign='center'))
 		
 
@@ -180,7 +210,7 @@ class ArithmeticCoding:
 			low_old = low
 			high_old = high
 
-		print(low_old, high_old)
+		# print(low_old, high_old)
 		self.tag = 0.5 ## since 0.5 always lies between high and low because we rescale even after the last symbol encoding. 
 
 		# tag_to_bin = decToBinConversion(self.tag, self.lx - len(output_sym))
@@ -189,7 +219,9 @@ class ArithmeticCoding:
 		self.encoded_value = '0.' + output_sym + tag_to_bin.split('.')[1]
 
 		if self.show_steps:
-			output.append([' ', f"Rescaling Output = {output_sym}\nTag = {self.tag}\nCompressed Value = {self.encoded_value}"])
+			output.append([' ', f"Symbols Encoded = {i+1}\nRescaling Output = {output_sym}\nTag = {self.tag}\nCompressed Value = {self.encoded_value}"])
+			print("\nEncoding Process")
+			print("------------------")
 			print(tabulate.tabulate(output, headers= ['Symbol', 'Interval', 'Remark'], tablefmt="pretty", numalign='center'))
 		else: 
 			print("Encoded value \n-------------\n", self.encoded_value)
@@ -267,22 +299,24 @@ class ArithmeticCoding:
 			high_old = high
 			if self.show_steps:
 				output.append([decoded_symbols, encoded_value, t, (low, high), "Pick next\n"])	
+		# print(low_old, high_old)
 
 		if self.show_steps:
+			print("\nDecoding Process")
+			print("------------------")
 			print(tabulate.tabulate(output, headers=['Decoded Symb', 'Encoded Value', 'Tag', 'Range', 'Remark'], tablefmt="pretty", numalign='center'))
-			print(f"Decoded Value = {decoded_symbols}")
+			print(f"Decoded Value = {decoded_symbols}\n")
 		else: 
 			print(f"\nDecoded Value\n-------------\n{decoded_symbols}")
 		
-		return 0
+		return decoded_symbols
 
+#=================================================================================================
 		
 dist = {'a':0.8, 'b': 0.02, 'c': 0.18}
 
-
+file = os.getcwd() + '/src/files/hello.txt'
 f = ArithmeticCoding(file, distribution= None, show_steps= True)
-
 encoded_value, number = f.encoding(value=None)
-print(number)
-f.decoding(encoded_value, length = number)
-	
+decoded_symbols = f.decoding(encoded_value, length = number)
+check(f.symbols, decoded_symbols)
