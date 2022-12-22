@@ -2,65 +2,7 @@ import os
 import math
 import tabulate
 import json
-
-
-def decToBinConversion(no:int, precision:int)->str: 
-    binary = ""  
-    IntegralPart = int(no)  
-    fractionalPart = no- IntegralPart
-    #to convert an integral part to binary equivalent
-    while (IntegralPart):
-        re = IntegralPart % 2 
-        binary += str(re)  
-        IntegralPart //= 2
-    binary = binary[ : : -1]    
-    binary += '.'
-    #to convert an fractional part to binary equivalent
-    while (precision):
-        fractionalPart *= 2
-        bit = int(fractionalPart)
-        if (bit == 1) :   
-            fractionalPart -= bit  
-            binary += '1'
-        else : 
-            binary += '0'
-        precision -= 1
-    return binary  
-
-def getBinaryFractionValue(binaryFraction):
-	"""
-		Compute the binary fraction value using the formula
-		of:
-			(2^-1) * 1st bit + (2^-2) * 2nd bit + ...
-	"""
-	value = 0
-	power = 1
-
-	# Git the fraction bits after "."
-	fraction = binaryFraction.split('.')[1]
-
-	# Compute the formula value
-	for i in fraction:
-		value += ((2 ** (-power)) * int(i))
-		power += 1
-
-	return value
-
-def check(t1:str, t2:str) -> float:
-	'''
-	Computes the error rate and calculates the places where error occured
-	'''
-	min_str = min(len(t1), len(t2))
-	max_str = max(len(t1), len(t2))
-	err = 0
-	for i in range(min_str):
-		if t1[i] != t2[i]:
-			err += 1
-		else:
-			err += 0
-	print(f"Error = {err*100/max_str}%")
-
-
+from utils import *
 class ArithmeticCoding:
 	'''
 	Parameters:
@@ -69,20 +11,25 @@ class ArithmeticCoding:
 	distribution: default None/ dict
 			accepts arbitrary distribution, {symbol, probability}
 			dist = {'a':0.8, 'b': 0.02, 'c': 0.18}
-			TODO: check for probability distribution
 	show_steps: bool: default False 
 			show encoding and decoding process in the terminal
 			use for small inputs only. 
 	
 	'''
-	def __init__(self, file, distribution: dict = None, show_steps: bool = False) -> None:
-		self.file = file
+	def __init__(self, file: str = None, distribution: dict = None, show_steps: bool = False) -> None:
+		if file != None and distribution != None:
+			raise ReferenceError("Expected either a file or a distribution")
 		self.show_steps = show_steps
 		if distribution == None:
+			self.file = file  #file = 'path to file'
 			self.__parse()
 		else:
+			self.file = file  # file = None
 			self.prob_dist = distribution
-			self.symbols = self.prob_dist.keys()
+			total = sum(values for values in self.prob_dist.values())
+			if total != 1:
+				raise ValueError(f"Excepted total probability,1 got {total}")
+			self.symbols = list(self.prob_dist.keys())
 			
 		self.__cumulativeDist()
 
@@ -316,7 +263,7 @@ class ArithmeticCoding:
 dist = {'a':0.8, 'b': 0.02, 'c': 0.18}
 
 file = os.getcwd() + '/src/files/hello.txt'
-f = ArithmeticCoding(file, distribution= None, show_steps= True)
-encoded_value, number = f.encoding(value=None)
+f = ArithmeticCoding(file=file, distribution= None, show_steps= True)
+encoded_value, number = f.encoding()
 decoded_symbols = f.decoding(encoded_value, length = number)
 check(f.symbols, decoded_symbols)
