@@ -143,9 +143,9 @@ class ArithmeticCoding:
 		range = 1
 		symbols= self.symbols if value == None else value
 
-		self.__symbol_prob(symbols)  ## computes the truncation value 
+		# self.__symbol_prob(symbols)  ## computes the truncation value  
 		sym = ''
-		output_sym = ''
+		output_sym = ''  ## output from encoding process
 		for i, s in enumerate(symbols):
 			sym += s
 			if s not in self.symbols:
@@ -155,7 +155,7 @@ class ArithmeticCoding:
 
 			low = low_old + range * interval[0]
 			high = low_old + range * interval[1]
-			while (high < 0.5 and low < 0.5) or (high > 0.5 and low > 0.5) and i != len(symbols)-1:
+			while (high < 0.5 and low < 0.5) or (high > 0.5 and low > 0.5):
 				if low > 0.5 and high > 0.5:
 					output_sym += '1'
 					if self.show_steps:
@@ -180,10 +180,11 @@ class ArithmeticCoding:
 			low_old = low
 			high_old = high
 
+		print(low_old, high_old)
+		self.tag = 0.5 ## since 0.5 always lies between high and low because we rescale even after the last symbol encoding. 
 
-		self.tag = (high_old + low_old)/2  
-
-		tag_to_bin = decToBinConversion(self.tag, self.lx - len(output_sym))
+		# tag_to_bin = decToBinConversion(self.tag, self.lx - len(output_sym))
+		tag_to_bin = '0.1'   ## binary conversion of 0.5
 
 		self.encoded_value = '0.' + output_sym + tag_to_bin.split('.')[1]
 
@@ -234,7 +235,7 @@ class ArithmeticCoding:
 
 
 			
-			while (high < 0.5 and low <= 0.5) or (high > 0.5 and low >= 0.5) and i!= length -1:
+			while (high < 0.5 and low <= 0.5) or (high > 0.5 and low >= 0.5):
 		
 				if low >= 0.5 and high > 0.5:
 					
@@ -279,8 +280,9 @@ class ArithmeticCoding:
 dist = {'a':0.8, 'b': 0.02, 'c': 0.18}
 
 
-f = ArithmeticCoding(file, distribution= None, show_steps= False)
+f = ArithmeticCoding(file, distribution= None, show_steps= True)
 
 encoded_value, number = f.encoding(value=None)
+print(number)
 f.decoding(encoded_value, length = number)
 	

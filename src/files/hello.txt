@@ -1,5 +1,1 @@
-Hello World!
-Bonjour Monde!
-Ola Mundo!
-Namaskar Sansar!
-Hallo Welt
+hello
